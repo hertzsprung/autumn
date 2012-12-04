@@ -18,8 +18,23 @@ public class SingletonBinderTest {
 		}
 	}
 	
+	interface MyBrokenModule {
+		Object myComponent(String argument);
+	}
+	
+	static class TestMyBrokenModule implements MyBrokenModule {
+		@Override public Object myComponent(String argument) {
+			return new Object();
+		}
+	}
+	
 	@Test public void providesSameInstanceOnSuccessiveCalls() {
 		MyModule myModule = SingletonBinder.bind(MyModule.class, new TestMyModule());
 		assertThat(myModule.myComponent(), both(notNullValue()).and(sameInstance(myModule.myComponent())));
+	}
+	
+	@Test(expected=BindException.class)
+	public void failsToBindInterfaceHavingMethodWithNonEmptyArgumentList() {
+		SingletonBinder.bind(MyBrokenModule.class, new TestMyBrokenModule());
 	}
 }

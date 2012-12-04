@@ -16,6 +16,10 @@ public class SingletonBinder {
 			{
 				try {
 					for (Method method : iface.getMethods()) {
+						if (method.getParameterTypes().length != 0) {
+							throw new BindException("Module " + iface.getCanonicalName() + " declares method " + method.getName() + "() with non-empty argument list");
+						}
+						
 						components.put(method, method.invoke(implementation));
 					}
 				} catch (IllegalAccessException e) {
