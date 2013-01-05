@@ -1,40 +1,72 @@
 package uk.co.datumedge.autumn;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import javassist.util.proxy.MethodFilter;
+import javassist.util.proxy.MethodHandler;
+import javassist.util.proxy.Proxy;
+import javassist.util.proxy.ProxyFactory;
+
 public class SingletonBinder {
-	@SuppressWarnings("unchecked")
 	public static <MODULE> MODULE bind(final Class<MODULE> iface, final MODULE implementation) {
-		InvocationHandler invocationHandler = new InvocationHandler() {
+		checkAllMethodsTakeNoParameters(iface);
+
+		MethodHandler methodHandler = new MethodHandler() {
 			private final Map<Method, Object> components = new HashMap<Method, Object>();
 
-			{
-				try {
-					for (Method method : iface.getMethods()) {
-						if (method.getParameterTypes().length != 0) {
-							throw new BindException("Module " + iface.getCanonicalName() + " declares method " + method.getName() + "() with non-empty argument list");
-						}
-						
-						components.put(method, method.invoke(implementation));
+			@Override public Object invoke(Object self, Method thisMethod, Method proceed, Object[] args) throws Throwable {
+				synchronized (components) {
+					if (!components.containsKey(thisMethod)) {
+						components.put(thisMethod, proceed.invoke(self, args));
 					}
-				} catch (IllegalAccessException e) {
-					throw new RuntimeException(e);
-				} catch (InvocationTargetException e) {
-					throw new RuntimeException(e);
+					return components.get(thisMethod);
 				}
 			}
-			
-			@Override
-			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-				return components.get(method);
+		};
+
+		MethodFilter methodFilter = new MethodFilter() {
+			@Override public boolean isHandled(Method candidateMethod) {
+				for (Method interfaceMethod : iface.getMethods()) {
+					if (areSame(candidateMethod, interfaceMethod)) {
+						return true;
+					}
+				}
+				return false;
 			}
 		};
-		
-		return (MODULE) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class<?>[]{iface}, invocationHandler);
+
+		return createProxy(implementation, methodHandler, methodFilter);
+	}
+
+	private static <MODULE> MODULE createProxy(final MODULE implementation, MethodHandler methodHandler,
+			MethodFilter methodFilter) {
+		try {
+			ProxyFactory proxyFactory = new ProxyFactory();
+			proxyFactory.setSuperclass(implementation.getClass());
+			proxyFactory.setFilter(methodFilter);
+			Class<?> clazz = proxyFactory.createClass();
+			@SuppressWarnings("unchecked") MODULE proxy = (MODULE) clazz.newInstance();
+			((Proxy) proxy).setHandler(methodHandler);
+			return proxy;
+		} catch (InstantiationException e) {
+			throw new BindException(e);
+		} catch (IllegalAccessException e) {
+			throw new BindException(e);
+		}
+	}
+
+	private static <MODULE> void checkAllMethodsTakeNoParameters(final Class<MODULE> iface) {
+		for (Method method : iface.getMethods()) {
+			if (method.getParameterTypes().length != 0) {
+				throw new BindException("Module " + iface.getCanonicalName() + " declares method " + method.getName() + "() with non-empty argument list");
+			}
+		}
+	}
+
+	private static boolean areSame(Method m1, Method m2) {
+		return m1.getName().equals(m2.getName()) && Arrays.equals(m1.getParameterTypes(), m2.getParameterTypes());
 	}
 }

@@ -10,14 +10,24 @@ import org.junit.Test;
 public class SingletonBinderTest {
 	interface MyModule {
 		Object myComponent();
+		Object myParent();
+		Object myChild();
 	}
-	
+
 	static class TestMyModule implements MyModule {
 		@Override public Object myComponent() {
 			return new Object();
 		}
+
+		@Override public Object myParent() {
+			return myChild();
+		}
+
+		@Override public Object myChild() {
+			return new Object();
+		}
 	}
-	
+
 	interface MyBrokenModule {
 		Object myComponent(String argument);
 	}
@@ -27,14 +37,19 @@ public class SingletonBinderTest {
 			return new Object();
 		}
 	}
-	
+
 	@Test public void providesSameInstanceOnSuccessiveCalls() {
 		MyModule myModule = SingletonBinder.bind(MyModule.class, new TestMyModule());
 		assertThat(myModule.myComponent(), both(notNullValue()).and(sameInstance(myModule.myComponent())));
 	}
-	
+
 	@Test(expected=BindException.class)
 	public void failsToBindInterfaceHavingMethodWithNonEmptyArgumentList() {
 		SingletonBinder.bind(MyBrokenModule.class, new TestMyBrokenModule());
+	}
+
+	@Test public void providesSameInstanceToMethodInSameModule() {
+		MyModule myModule = SingletonBinder.bind(MyModule.class, new TestMyModule());
+		assertThat(myModule.myParent(), sameInstance(myModule.myChild()));
 	}
 }
