@@ -3,11 +3,11 @@
 	<parent>
 		<groupId>uk.co.datumedge</groupId>
 		<artifactId>datumedge-base</artifactId>
-		<version>0.3-SNAPSHOT</version>
+		<version>0.3</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>autumn</artifactId>
-	<version>0.1-SNAPSHOT</version>
+	<version>1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	
 	<properties>
@@ -37,4 +37,26 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	
+	<name>Autumn</name>
+	<description>A microscopically small alternative to Spring Framework that creates singleton objects</description>
+	<url>https://github.com/hertzsprung/autumn</url>
+	<inceptionYear>2013</inceptionYear>
+	
+	<issueManagement>
+		<system>GitHub</system>
+		<url>https://github.com/hertzsprung/autumn/issues</url>
+	</issueManagement>
+	<scm>
+		<connection>scm:git:git://github.com/hertzsprung/autumn.git</connection>
+		<developerConnection>scm:git:git@github.com:hertzsprung/autumn.git</developerConnection>
+		<url>http://github.com/hertzsprung/autumn</url>
+	</scm>
+	<distributionManagement>
+		<site>
+			<id>datumedge-site</id>
+			<name>DatumEdge website</name>
+			<url>scp://pepperfish.net/home/jshaw/websites/datumedge.co.uk/www/html/autumn</url>
+		</site>
+	</distributionManagement>
 </project>
