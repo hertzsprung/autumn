@@ -9,7 +9,7 @@ Installing from Maven Central
     <dependency>
     	<groupId>uk.co.datumedge</groupId>
     	<artifactId>autumn</artifactId>
-    	<version>0.1</version>
+    	<version>1.0</version>
     </dependency>
 
 
