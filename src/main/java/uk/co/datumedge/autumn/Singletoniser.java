@@ -1,6 +1,7 @@
 package uk.co.datumedge.autumn;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,9 +11,10 @@ import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.Proxy;
 import javassist.util.proxy.ProxyFactory;
 
-public class SingletonBinder {
-	public static <MODULE> MODULE bind(final Class<MODULE> iface, final MODULE implementation) {
+public class Singletoniser {
+	public static <MODULE> MODULE singletonise(final Class<MODULE> iface, final MODULE implementation) {
 		checkAllMethodsTakeNoParameters(iface);
+		checkAllImplementedMethodsAreNonFinal(iface, implementation);
 
 		MethodHandler methodHandler = new MethodHandler() {
 			private final Map<Method, Object> components = new HashMap<Method, Object>();
@@ -41,8 +43,7 @@ public class SingletonBinder {
 		return createProxy(implementation, methodHandler, methodFilter);
 	}
 
-	private static <MODULE> MODULE createProxy(final MODULE implementation, MethodHandler methodHandler,
-			MethodFilter methodFilter) {
+	private static <MODULE> MODULE createProxy(MODULE implementation, MethodHandler methodHandler, MethodFilter methodFilter) {
 		try {
 			ProxyFactory proxyFactory = new ProxyFactory();
 			proxyFactory.setSuperclass(implementation.getClass());
@@ -58,11 +59,23 @@ public class SingletonBinder {
 		}
 	}
 
-	private static <MODULE> void checkAllMethodsTakeNoParameters(final Class<MODULE> iface) {
+	private static <MODULE> void checkAllMethodsTakeNoParameters(Class<MODULE> iface) {
 		for (Method method : iface.getMethods()) {
 			if (method.getParameterTypes().length != 0) {
 				throw new BindException("Module " + iface.getCanonicalName() + " declares method " + method.getName() + "() with non-empty argument list");
 			}
+		}
+	}
+
+	private static <MODULE> void checkAllImplementedMethodsAreNonFinal(Class<MODULE> iface, MODULE implementation) {
+		try {
+			for (Method ifaceMethod : iface.getMethods()) {
+				if (Modifier.isFinal(implementation.getClass().getMethod(ifaceMethod.getName(), ifaceMethod.getParameterTypes()).getModifiers())) {
+					throw new BindException("Module " + implementation.getClass().getCanonicalName() + " declares method " + ifaceMethod.getName() + "() as final");
+				}
+			}
+		} catch (NoSuchMethodException e) {
+			throw new BindException(e);
 		}
 	}
 
