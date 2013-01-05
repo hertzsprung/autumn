@@ -14,7 +14,9 @@ import javassist.util.proxy.ProxyFactory;
 /**
  * Proxies classes to provide singleton instances of their methods' return values.
  */
-public class Singletoniser {
+public final class Singletoniser {
+	private Singletoniser() { }
+
 	/**
 	 * Creates a proxy that implements an interface and subclasses a concrete instance of that interface. The proxy
 	 * returns the same return value on successive invocations to the same method.
@@ -121,12 +123,16 @@ public class Singletoniser {
 	}
 
 	private static <T> void checkAllImplementedMethodsAreNonFinal(Class<T> iface, T implementation) {
-		try {
-			for (Method ifaceMethod : iface.getMethods()) {
-				if (Modifier.isFinal(implementation.getClass().getMethod(ifaceMethod.getName(), ifaceMethod.getParameterTypes()).getModifiers())) {
-					throw new SingletoniseException(implementation.getClass().getCanonicalName() + " declares method " + ifaceMethod.getName() + "() as final");
-				}
+		for (Method ifaceMethod : iface.getMethods()) {
+			if (isFinal(implementation.getClass(), ifaceMethod)) {
+				throw new SingletoniseException(implementation.getClass().getCanonicalName() + " declares method " + ifaceMethod.getName() + "() as final");
 			}
+		}
+	}
+
+	private static boolean isFinal(Class<?> type, Method method) {
+		try {
+			return Modifier.isFinal(type.getMethod(method.getName(), method.getParameterTypes()).getModifiers());
 		} catch (NoSuchMethodException e) {
 			throw new SingletoniseException(e);
 		}
