@@ -42,7 +42,7 @@ public static void main(String[] args) {
 	System.out.println(module.random());
 	System.out.println(module.anotherRandom());
 	// all invocations print the same value
-	}
+}
 ```
     
 Resources
