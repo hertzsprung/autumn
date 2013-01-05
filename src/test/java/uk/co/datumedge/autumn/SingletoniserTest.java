@@ -38,7 +38,7 @@ public class SingletoniserTest {
 		assertThat(myModule.myParent(), sameInstance(myModule.myChild()));
 	}
 
-	@Test(expected=BindException.class)
+	@Test(expected=SingletoniseException.class)
 	public void failsToSingletoniseInterfaceHavingMethodWithNonEmptyArgumentList() {
 		Singletoniser.singletonise(MyBrokenModuleWithParameter.class, new TestMyBrokenModuleWithParameter());
 	}
@@ -53,7 +53,7 @@ public class SingletoniserTest {
 		}
 	}
 
-	@Test(expected=BindException.class)
+	@Test(expected=SingletoniseException.class)
 	public void failsToSingletoniseImplementationHavingFinalMethod() {
 		Singletoniser.singletonise(MyBrokenModuleWithFinalMethod.class, new TestMyBrokenModuleWithFinalMethod());
 	}
@@ -65,6 +65,20 @@ public class SingletoniserTest {
 	static class TestMyBrokenModuleWithFinalMethod implements MyBrokenModuleWithFinalMethod {
 		@Override public final Object myComponent() {
 			return new Object();
+		}
+	}
+
+	@Test(expected=SingletoniseException.class)
+	public void failsToSingletoniseInterfaceHavingMethodReturningVoid() {
+		Singletoniser.singletonise(MyBrokenModuleWithVoidReturn.class, new TestMyBrokenModuleWithVoidReturn());
+	}
+
+	interface MyBrokenModuleWithVoidReturn {
+		void myComponent();
+	}
+
+	static class TestMyBrokenModuleWithVoidReturn implements MyBrokenModuleWithVoidReturn {
+		@Override public void myComponent() {
 		}
 	}
 }
