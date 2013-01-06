@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/hertzsprung/autumn.png)](https://travis-ci.org/hertzsprung/autumn)
+
 A microscopically small alternative to Spring Framework that creates singleton objects.
 The library is released under the [MIT license](http://www.opensource.org/licenses/mit-license.php).
 
